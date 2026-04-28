@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -39,16 +40,30 @@ class RemoteConfigFetcher {
   }
 
   Future<RemoteConfig?> fetchFromUrls(List<String> urls) async {
+    if (urls.isEmpty) return null;
+    final completer = Completer<RemoteConfig?>();
+    int remaining = urls.length;
+
     for (final url in urls) {
-      try {
-        final config = await _fetchSingle(url);
-        if (config != null) return config;
-      } catch (e) {
+      _fetchSingle(url).then((config) {
+        if (!completer.isCompleted && config != null) {
+          completer.complete(config);
+        } else {
+          remaining--;
+          if (remaining == 0 && !completer.isCompleted) {
+            completer.complete(null);
+          }
+        }
+      }).catchError((e) {
         debugPrint('RemoteConfigFetcher: failed $url => $e');
-        continue;
-      }
+        remaining--;
+        if (remaining == 0 && !completer.isCompleted) {
+          completer.complete(null);
+        }
+      });
     }
-    return null;
+
+    return completer.future;
   }
 
   Future<RemoteConfig?> _fetchSingle(String url) async {
