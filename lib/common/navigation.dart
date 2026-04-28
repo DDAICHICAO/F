@@ -1,6 +1,10 @@
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/views/views.dart';
+import 'package:fl_clash/v2board/views/dashboard/user_dashboard_view.dart';
+import 'package:fl_clash/v2board/views/invite/invite_view.dart';
+import 'package:fl_clash/v2board/views/notice/notice_list_view.dart';
+import 'package:fl_clash/v2board/views/ticket/ticket_list_view.dart';
 import 'package:flutter/material.dart';
 
 class Navigation {
@@ -71,6 +75,30 @@ class Navigation {
         label: PageLabel.tools,
         builder: (_) => const ToolsView(key: GlobalObjectKey(PageLabel.tools)),
         modes: [NavigationItemMode.desktop, NavigationItemMode.mobile],
+      ),
+      NavigationItem(
+        icon: const Icon(Icons.person),
+        label: PageLabel.userCenter,
+        builder: (_) => const UserDashboardView(key: GlobalObjectKey(PageLabel.userCenter)),
+        modes: [NavigationItemMode.mobile, NavigationItemMode.desktop],
+      ),
+      NavigationItem(
+        icon: const Icon(Icons.support_agent),
+        label: PageLabel.tickets,
+        builder: (_) => const TicketListView(key: GlobalObjectKey(PageLabel.tickets)),
+        modes: [NavigationItemMode.mobile, NavigationItemMode.desktop],
+      ),
+      NavigationItem(
+        icon: const Icon(Icons.notifications),
+        label: PageLabel.notices,
+        builder: (_) => const NoticeListView(key: GlobalObjectKey(PageLabel.notices)),
+        modes: [NavigationItemMode.mobile, NavigationItemMode.desktop],
+      ),
+      NavigationItem(
+        icon: const Icon(Icons.card_giftcard),
+        label: PageLabel.invite,
+        builder: (_) => const InviteView(key: GlobalObjectKey(PageLabel.invite)),
+        modes: [NavigationItemMode.mobile, NavigationItemMode.desktop],
       ),
     ];
   }

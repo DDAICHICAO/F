@@ -14,6 +14,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:fl_clash/v2board/api/subscribe_bridge.dart';
+import 'package:fl_clash/v2board/views/auth/v2board_guard.dart';
+
 import 'controller.dart';
 import 'pages/pages.dart';
 
@@ -63,8 +66,15 @@ class ApplicationState extends ConsumerState<Application> {
   void _autoUpdateProfilesTask() {
     _autoUpdateProfilesTaskTimer = Timer(const Duration(minutes: 20), () async {
       await appController.autoUpdateProfiles();
+      _syncV2boardSubscribeInfo();
       _autoUpdateProfilesTask();
     });
+  }
+
+  void _syncV2boardSubscribeInfo() {
+    try {
+      ref.read(subscribeBridgeProvider).syncInfo();
+    } catch (_) {}
   }
 
   Widget _buildPlatformState({required Widget child}) {
@@ -158,7 +168,7 @@ class ApplicationState extends ConsumerState<Application> {
           home: child!,
         );
       },
-      child: const HomePage(),
+      child: const V2boardGuard(child: HomePage()),
     );
   }
 
