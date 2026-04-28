@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -6,12 +5,17 @@ import 'package:dio/io.dart';
 import 'package:fl_clash/v2board/config/remote_config_model.dart';
 import 'package:flutter/foundation.dart';
 
-const _kTimeout = Duration(seconds: 5);
+const _kTimeout = Duration(seconds: 10);
 
 const kBuiltinOssUrls = [
-  'https://bust-sh.oss-cn-shanghai.aliyuncs.com/sntp.yaml',
-  'https://bust-gz-1251301437.cos.ap-guangzhou.myqcloud.com/sntp.yaml',
-  'https://raw.githubusercontent.com/sntpPro/rule_list/refs/heads/main/sntp.yaml',
+  'https://bucket-1388497120.cos.ap-shanghai.myqcloud.com/config/sntp-conifg.json',
+  'https://bucket-n-1388497120.cos.ap-beijing.myqcloud.com/config/sntp-conifg.json',
+  'https://8.210.218.228/config/sntp-conifg.json',
+  'https://8.217.1.95/config/sntp-conifg.json',
+  'https://47.107.67.134/config/sntp-conifg.json',
+  'https://112.74.166.174/config/sntp-conifg.json',
+  'https://raw.gitcode.com/toamsterron/oss/raw/main/config/sntp-conifg.json',
+  'https://gitlab.com/toamsterron/oss/-/raw/main/config/sntp-conifg.json',
 ];
 
 class RemoteConfigFetcher {
@@ -58,14 +62,23 @@ class RemoteConfigFetcher {
     }
 
     final body = response.data!.trim();
-    final jsonMap = json.decode(body) as Map<String, Object?>;
-    final config = RemoteConfig.fromJson(jsonMap);
 
-    final decodedApi = config.decodedApi;
-    if (decodedApi.isEmpty) return null;
+    // 尝试先 Base64 解码，再 JSON 解析
+    RemoteConfig? config;
+    config = RemoteConfig.fromBase64(body);
+    if (config != null && config.hosts.isNotEmpty) {
+      debugPrint('RemoteConfigFetcher: success (base64) from $url');
+      return config;
+    }
 
-    debugPrint('RemoteConfigFetcher: success from $url');
-    return config;
+    // 直接 JSON 解析
+    config = RemoteConfig.fromRawJson(body);
+    if (config != null && config.hosts.isNotEmpty) {
+      debugPrint('RemoteConfigFetcher: success (json) from $url');
+      return config;
+    }
+
+    return null;
   }
 }
 

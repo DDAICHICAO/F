@@ -17,22 +17,19 @@ class V2boardApi {
 
   late final Dio _dio;
   RemoteConfig? _config;
-  int _activeApiIndex = 0;
+  int _activeHostIndex = 0;
 
-  List<String> get _decodedApi =>
-      _config?.decodedApi ?? [];
-
-  String? get _path => _config?.path;
+  List<String> get _hosts => _config?.hosts ?? [];
 
   String? get _baseUrl {
-    final apis = _decodedApi;
-    if (apis.isEmpty || _activeApiIndex >= apis.length) return null;
-    return '${apis[_activeApiIndex]}${_path ?? ''}';
+    final hosts = _hosts;
+    if (hosts.isEmpty || _activeHostIndex >= hosts.length) return null;
+    return hosts[_activeHostIndex];
   }
 
   RemoteConfig? get config => _config;
 
-  int get activeApiIndex => _activeApiIndex;
+  int get activeHostIndex => _activeHostIndex;
 
   void init() {
     final httpClient = HttpClient();
@@ -66,9 +63,9 @@ class V2boardApi {
       final config = RemoteConfig.fromRawJson(cached);
       if (config != null) {
         _config = config;
-        _activeApiIndex = storage.activeApiIndex;
-        if (_activeApiIndex >= config.api.length) {
-          _activeApiIndex = 0;
+        _activeHostIndex = storage.activeApiIndex;
+        if (_activeHostIndex >= config.hosts.length) {
+          _activeHostIndex = 0;
         }
       }
     }
@@ -76,7 +73,7 @@ class V2boardApi {
 
   Future<void> updateConfig(RemoteConfig config) async {
     _config = config;
-    _activeApiIndex = 0;
+    _activeHostIndex = 0;
     final storage = await V2boardLocalStorage.getInstance();
     await storage.setOssConfig(json.encode(config.toJson()));
     await storage.setActiveApiIndex(0);
@@ -114,13 +111,13 @@ class V2boardApi {
     return response.data ?? {};
   }
 
-  Future<void> switchToNextApi() async {
-    final apis = _decodedApi;
-    if (apis.length <= 1) return;
-    _activeApiIndex = (_activeApiIndex + 1) % apis.length;
+  Future<void> switchToNextHost() async {
+    final hosts = _hosts;
+    if (hosts.length <= 1) return;
+    _activeHostIndex = (_activeHostIndex + 1) % hosts.length;
     final storage = await V2boardLocalStorage.getInstance();
-    await storage.setActiveApiIndex(_activeApiIndex);
-    debugPrint('V2boardApi: switched to api index $_activeApiIndex');
+    await storage.setActiveApiIndex(_activeHostIndex);
+    debugPrint('V2boardApi: switched to host index $_activeHostIndex');
   }
 }
 
@@ -222,7 +219,7 @@ class _RetryOnFailInterceptor extends Interceptor {
     if (error is ApiError && error.type == ApiErrorType.network) {
       final retryCount = err.requestOptions.extra['retryCount'] as int? ?? 0;
       if (retryCount < _maxRetry) {
-        await _api.switchToNextApi();
+        await _api.switchToNextHost();
         final newOptions = err.requestOptions.copyWith(
           extra: {...err.requestOptions.extra, 'retryCount': retryCount + 1},
         );
@@ -230,8 +227,8 @@ class _RetryOnFailInterceptor extends Interceptor {
           final response = await _api._dio.fetch(newOptions);
           handler.resolve(response);
           return;
-        } on DioException catch (e) {
-          handler.next(e);
+        } on DioException catch (i) {
+          handler.next(i);
           return;
         }
       }

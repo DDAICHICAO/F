@@ -33,7 +33,7 @@ class RemoteConfigNotifier extends Notifier<RemoteConfigState> {
 
     final manualUrl = storage.manualApiUrl;
     if (manualUrl != null && manualUrl.isNotEmpty) {
-      final config = RemoteConfig(api: [manualUrl], path: '');
+      final config = RemoteConfig(hosts: [manualUrl]);
       await v2boardApi.updateConfig(config);
       state = RemoteConfigState(status: RemoteConfigStatus.ready, config: config);
       return;
@@ -69,7 +69,7 @@ class RemoteConfigNotifier extends Notifier<RemoteConfigState> {
     final storage = await V2boardLocalStorage.getInstance();
     await storage.setManualApiUrl(url);
 
-    final config = RemoteConfig(api: [url], path: '');
+    final config = RemoteConfig(hosts: [url]);
     await v2boardApi.updateConfig(config);
     state = RemoteConfigState(status: RemoteConfigStatus.ready, config: config);
   }
